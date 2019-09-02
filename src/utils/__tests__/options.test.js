@@ -6,7 +6,9 @@ import {
   string,
   boolean,
   number,
-  toFilterOpts
+  toFilterOpts,
+  toSpawnOpts,
+  toDependencyTypes
 } from '../options';
 
 describe('options', () => {
@@ -28,7 +30,7 @@ describe('options', () => {
     expect(() => number('number', 'flag')).toThrow();
   });
 
-  test('toFilerOptions', () => {
+  test('toFilterOptions', () => {
     expect(toFilterOpts({ only: 'only' })).toEqual({ only: 'only' });
     expect(toFilterOpts({ onlyFs: 'onlyFs' })).toEqual({ onlyFs: 'onlyFs' });
     expect(toFilterOpts({ ignore: 'ignore' })).toEqual({ ignore: 'ignore' });
@@ -36,6 +38,33 @@ describe('options', () => {
       ignoreFs: 'ignoreFs'
     });
     expect(toFilterOpts({})).toEqual({});
+  });
+
+  test('toDependencyTypes', () => {
+    expect(toDependencyTypes('devDependencies')).toEqual(['devDependencies']);
+    expect(toDependencyTypes('peerDependencies')).toEqual(['peerDependencies']);
+    expect(toDependencyTypes('devDependencies,peerDependencies')).toEqual([
+      'devDependencies',
+      'peerDependencies'
+    ]);
+    expect(() => toDependencyTypes('deps', 'flagName')).toThrow(
+      'Flag "flagName" must be a comma separated list of valid dependency types. Received invalid types: "deps"'
+    );
+  });
+
+  test('toSpawnOpts', () => {
+    expect(toSpawnOpts({ parallel: true })).toEqual({ orderMode: 'parallel' });
+    expect(toSpawnOpts({ serial: true })).toEqual({ orderMode: 'serial' });
+    expect(toSpawnOpts({ bail: true })).toEqual({ bail: true });
+    expect(toSpawnOpts({ parallelNodes: true })).toEqual({
+      orderMode: 'parallel-nodes'
+    });
+    expect(
+      toSpawnOpts({ excludeFromGraph: 'devDependencies,peerDependencies' })
+    ).toEqual({ excludeFromGraph: ['devDependencies', 'peerDependencies'] });
+    expect(() => toSpawnOpts({ parallel: true, serial: true })).toThrow(
+      'Commands cannot be run both serially and in parallel'
+    );
   });
 
   test('toDependency', () => {
